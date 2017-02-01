@@ -1,0 +1,11 @@
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'feedback/style.css' %}" />
+
+<h3> FEEDBACK PORTAL </h3>
+<h1>Welcome to the institute's feedback portal</h1>
+To fill your feedback be please proceed to the
+<a href = "{% url 'feedback:login' %}"> <b> Login Page.</b> </a>
+<br><br>
+<img src = "{% static 'feedback/images/tower.png' %}">
+<br><br>
+Feel free to drop any of your queries at: <u>feedback@institute.edu</u>

@@ -1,0 +1,84 @@
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'feedback/style.css' %}" />
+<script
+   type = "text/javascript" 
+   src = "{% static 'feedback/jquery.js' %}"></script>  
+<script
+   type = "text/javascript" 
+   src = "{% static 'feedback/row_click.js' %}"></script>
+
+<h3> FEEDBACK PORTAL </h3>
+{% if inst_det %}
+<h1>  Department of {{ inst_det.3 }} </h1>
+
+<h2> INSTRUCTOR PAGE </h2>
+
+<table class = "ostensible">
+  <tr>
+     <td align = "left">  <b> Instructor ID </b> </td>
+    <td> <b> - </b> </td>
+    <td align = "right"> {{ inst_det.0 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Name </b> </td>
+    <td> <b> - </b> </td>
+    <td align = "right"> {{ inst_det.1 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Dept. ID </b> </td>
+    <td> <b> - </b> </td>
+    <td align = "right"> {{ inst_det.2 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Dept. Name </b> </td>
+    <td> <b> - </b> </td>
+    <td align = "right"> {{ inst_det.3 }} </td>
+  </tr>
+</table> <br>
+Welcome back Professor {{ inst_det.1 }}!
+
+{% endif %}
+
+{% if course_det %}
+To view the feedback recieved by a particular course, please select it from the list of following course(s): <br><br>
+
+<table class = "obscure">
+  <tr>
+    <th> Serial # </th>
+    <th> Course Name </th>
+    <th> Course ID </th>
+    <th> Feedbacks Filled </th>
+  </tr>
+  
+  {% for course in course_det %}
+
+  <tr 
+     {% if course.1.1.0 > 0 and course.1.0.0 > 0 %}
+    class = "highlight"  data-href = "{% url 'feedback:feed_view' course.0.1 %}"
+    {% else %}
+    class = "highlight_done"
+    {% endif %} >
+    <td> {{ forloop.counter }}. </td>
+    <td>
+      {{ course.0.0 }}
+    </td>
+    <td> {{ course.0.1 }} </td>
+    <td> {{ course.1.1.0 }} / {{ course.1.0.0 }} </td>
+  </tr>
+
+  {% endfor %}
+
+</table>
+
+{% else %}
+
+You currently have no course feedbacks to view.
+
+{% endif %}
+
+<form action = "{% url 'feedback:logout' %}" method = "post">
+  {% csrf_token %}
+  <br><br><input type = "submit" value = "LOGOUT" name = "submit" />
+</form>
+
+

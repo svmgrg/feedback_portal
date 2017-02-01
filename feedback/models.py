@@ -1,0 +1,191 @@
+# This is an auto-generated Django model module.
+# You'll have to do the following manually to clean this up:
+#   * Rearrange models' order
+#   * Make sure each model has one field with primary_key=True
+#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
+# Feel free to rename the models, but don't rename db_table values or field names.
+#
+# Also note: You'll have to insert the output of 'django-admin sqlcustom [app_label]'
+# into your database.
+from __future__ import unicode_literals
+
+from django.db import models
+
+
+class CDept(models.Model):
+    courseno = models.AutoField(primary_key=True)
+    dept_id = models.ForeignKey('Department')
+    course_id = models.ForeignKey('Course')
+
+    class Meta:
+        managed = False
+        db_table = 'c_dept'
+        unique_together = (('dept_id', 'course_id'),)
+
+
+class Course(models.Model):
+    id = models.IntegerField(primary_key=True)
+    title = models.CharField(max_length=25, blank=True, null=True)
+    credits = models.IntegerField(blank=True, null=True)
+    instructor = models.ForeignKey('Instructor', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'course'
+
+
+class Department(models.Model):
+    id = models.IntegerField(primary_key=True)
+    dept_name = models.CharField(max_length=20, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'department'
+
+
+class FeedbackCourse(models.Model):
+    course_id = models.ForeignKey(Course)
+    student_id = models.ForeignKey('Student')
+    grading_policy = models.IntegerField(blank=True, null=True)
+    quality_of_tests = models.IntegerField(blank=True, null=True)
+    challenging = models.IntegerField(blank=True, null=True)
+    appreciation = models.IntegerField(blank=True, null=True)
+    relevance = models.IntegerField(blank=True, null=True)
+    availibility_material = models.IntegerField(blank=True, null=True)
+    comments = models.CharField(max_length=500, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'feedback_course'
+        unique_together = (('student_id', 'course_id'),)
+
+
+class FeedbackInst(models.Model):
+    instructor_id = models.ForeignKey('Instructor')
+    student_id = models.ForeignKey('Student')
+    teaching_method = models.IntegerField(blank=True, null=True)
+    evaluation_time = models.IntegerField(blank=True, null=True)
+    regularity = models.IntegerField(blank=True, null=True)
+    legibility = models.IntegerField(blank=True, null=True)
+    audibility = models.IntegerField(blank=True, null=True)
+    ability_to_explain = models.IntegerField(blank=True, null=True)
+    willingess_outside_class = models.IntegerField(blank=True, null=True)
+    interactiveness = models.IntegerField(blank=True, null=True)
+    length_lecture = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'feedback_inst'
+        unique_together = (('student_id', 'instructor_id'),)
+
+
+class FeedbackLab(models.Model):
+    lab_id = models.ForeignKey('Lab')
+    student_id = models.ForeignKey('Student')
+    quality_assignment = models.IntegerField(blank=True, null=True)
+    assessment = models.IntegerField(blank=True, null=True)
+    regularity = models.IntegerField(blank=True, null=True)
+    helpfullness_ta = models.IntegerField(blank=True, null=True)
+    length = models.IntegerField(blank=True, null=True)
+    usefullness = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'feedback_lab'
+        unique_together = (('student_id', 'lab_id'),)
+
+
+class FeedbackTut(models.Model):
+    tutorial_id = models.ForeignKey('Tutorial')
+    student_id = models.ForeignKey('Student')
+    quality_assignment = models.IntegerField(blank=True, null=True)
+    assessment = models.IntegerField(blank=True, null=True)
+    regularity = models.IntegerField(blank=True, null=True)
+    helpfullness_ta = models.IntegerField(blank=True, null=True)
+    length = models.IntegerField(blank=True, null=True)
+    usefullness = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'feedback_tut'
+        unique_together = (('student_id', 'tutorial_id'),)
+
+
+class Instructor(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=20, blank=True, null=True)
+    dept = models.ForeignKey(Department, blank=True, null=True)
+    password = models.CharField(max_length=10)
+
+    class Meta:
+        managed = False
+        db_table = 'instructor'
+
+
+class Lab(models.Model):
+    id = models.IntegerField(primary_key=True)
+    course = models.ForeignKey(Course, blank=True, null=True)
+    classroom = models.CharField(max_length=10, blank=True, null=True)
+    ta = models.CharField(max_length=10, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'lab'
+
+
+class StuLab(models.Model):
+    labno = models.AutoField(primary_key=True)
+    lab_id = models.ForeignKey(Lab)
+    student_id = models.ForeignKey('Student')
+
+    class Meta:
+        managed = False
+        db_table = 'stu_lab'
+        unique_together = (('student_id', 'lab_id'),)
+
+
+class StuTut(models.Model):
+    tutno = models.AutoField(primary_key=True)
+    tutorial_id = models.ForeignKey('Tutorial')
+    student_id = models.ForeignKey('Student')
+
+    class Meta:
+        managed = False
+        db_table = 'stu_tut'
+        unique_together = (('student_id', 'tutorial_id'),)
+
+
+class Student(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=20, blank=True, null=True)
+    year = models.IntegerField(blank=True, null=True)
+    degree = models.CharField(max_length=10, blank=True, null=True)
+    dept = models.ForeignKey(Department, blank=True, null=True)
+    password = models.CharField(max_length=10)
+
+    class Meta:
+        managed = False
+        db_table = 'student'
+
+
+class Takes(models.Model):
+    regno = models.AutoField(primary_key=True)
+    course_id = models.ForeignKey(Course)
+    student_id = models.ForeignKey(Student)
+    grades = models.CharField(max_length=2, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'takes'
+        unique_together = (('student_id', 'course_id'),)
+
+
+class Tutorial(models.Model):
+    id = models.IntegerField(primary_key=True)
+    course = models.ForeignKey(Course, blank=True, null=True)
+    classroom = models.CharField(max_length=10, blank=True, null=True)
+    ta = models.CharField(max_length=10, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tutorial'

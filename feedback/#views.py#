@@ -1,0 +1,506 @@
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect , Http404
+from django.db import connection
+from django.core.urlresolvers import reverse
+
+# Create your views here.
+
+def index (request):
+    return render(request, 'feedback/index.html')
+
+def login (request):
+    return render(request, 'feedback/login.html')
+
+def logout (request):
+    request.session['validated'] = 'LOGGED OUT'
+    context = {
+        'error_message': 'Logged out successfully!'
+    }
+    return render(request, 'feedback/login.html', context)
+
+def login_submit (request):
+    person = request.POST.get('type')
+    login_id = request.POST.get('login_id')
+    cursor = connection.cursor()
+    
+    if person == "instructor":
+        cursor.execute("SELECT password FROM instructor WHERE id = %s",
+                       [login_id])
+    else:
+        cursor.execute("SELECT password FROM student WHERE id = %s",
+                       [login_id ])
+    
+    row = cursor.fetchall()
+    
+    if len(row) == 0 or row[0][0] != request.POST.get('password'):
+        # no such record exists or password is wrong
+        context = {
+            'error_message': 'Either login_id or password is incorrect!'
+        }
+        return render(request, 'feedback/login.html', context)
+    else:
+        context = {
+            'id': login_id,
+            'valid': request.POST.get('valid'),
+        }
+        if request.POST.get('type') == 'student':
+            request.session['validated'] = 'STU'+str(login_id)
+            return HttpResponseRedirect(reverse('feedback:student', args=(login_id,)))
+        else:
+            request.session['validated'] = 'INST'+str(login_id)
+            return HttpResponseRedirect(reverse('feedback:instructor', args=(login_id,)))
+        
+def student (request, student_id):
+    
+    VALIDATED = str(request.session.get('validated'))
+    if VALIDATED[0:3] == 'STU' and VALIDATED[3:] == str(student_id):
+        cursor = connection.cursor()
+        cursor.execute(
+            '''SELECT s.id, s.name, s.degree, s.year, s.dept_id, d.dept_name 
+            FROM student s, department d
+            WHERE s.id = %s and s.dept_id = d.id''', [student_id])
+        row = cursor.fetchone()
+        cursor.execute(
+            '''SELECT c.id, c.title
+            FROM  course c, takes t
+            WHERE t.student_id = %s 
+            and t.course_id = c.id''', [student_id])
+        row2 = cursor.fetchall()
+        row2 = list(row2)
+        for i in range(len(row2)):
+            cursor.execute('select count(*) from feedback_course where student_id = %s and course_id = %s', [student_id, row2[i][0]])
+            row1 = cursor.fetchone()
+            row2[i] = list(row2[i])+list(row1)
+            if row2[i][2] == 0:
+                row2[i][2] = 'No'
+            else:
+                row2[i][2] = 'Yes'
+    
+        context = {
+            'stu_det': row,
+            'course_det': row2,
+        }
+        return render(request, 'feedback/student.html', context)
+    else:
+        return render(request, 'feedback/index.html')
+   
+def instructor (request, instructor_id):
+    
+    VALIDATED = str(request.session.get('validated'))
+    if VALIDATED[0:4] == 'INST' and VALIDATED[4:] == str(instructor_id):
+        cursor = connection.cursor()
+        cursor.execute(
+            '''SELECT i.id, name, dept_id, dept_name 
+            FROM instructor i, department d
+            WHERE i.id = %s and i.dept_id = d.id''', [instructor_id]
+        )
+        row = cursor.fetchone()
+        cursor.execute(
+            '''SELECT title, id
+            FROM  course 
+            WHERE instructor_id = %s''',
+            [instructor_id]
+        )
+        row2 = cursor.fetchall()
+        q = []
+        for i in row2:
+            cursor.execute('''
+            SELECT count(id) 
+            FROM feedback_course 
+            WHERE course_id = %s
+            ''', [i[1],])
+            q += cursor.fetchall()
+        x = []
+        for i in row2:
+            cursor.execute('''
+            SELECT count(student_id) 
+            FROM takes 
+            WHERE takes.course_id = %s
+            ''', [i[1],])
+            x += cursor.fetchall();
+        m = zip(row2, zip(x, q))
+        print m
+        context = {
+            'inst_det': row,
+            'course_det': m,
+        }
+        return render(request, 'feedback/instructor.html', context)
+    else:
+        return render(request, 'feedback/index.html')
+
+def feed_fill (request, course_id):
+    # whether the page is opened after validation
+    cursor = connection.cursor()
+    cursor.execute(
+        '''SELECT student_id
+        FROM takes 
+        WHERE course_id = %s''', [course_id])
+    row = cursor.fetchall()
+    
+    l = ()
+    for i in row:
+        l = l+i
+        
+    VALIDATED = str(request.session.get('validated'))
+    if VALIDATED[0: 3] == 'STU' and int(VALIDATED[3:]) in l:
+
+        # check if not already filled
+        cursor.execute(
+            '''SELECT id
+            FROM feedback_course
+            WHERE course_id = %s and student_id = %s''',
+            [course_id, VALIDATED[3:]])
+        poq = cursor.fetchall()
+        print "poq", len(poq)
+        if len(poq) != 0:
+            return HttpResponseRedirect(reverse('feedback:student',
+                                                args=(VALIDATED[3:],)))
+        
+        cursor.execute(
+            '''SELECT name, i.id
+            FROM instructor i, course c
+            WHERE c.instructor_id = i.id and c.id = %s''', [course_id])
+        row = cursor.fetchone()
+        cursor.execute(
+            '''SELECT title 
+            FROM course 
+            WHERE id = %s''', [course_id])
+        row1 = cursor.fetchone()
+        cursor.execute(
+            '''SELECT ta, id
+            FROM lab, stu_lab
+            WHERE course_id = %s and student_id = %s 
+            and lab_id = id    
+            ''', [course_id, VALIDATED[3:]])
+        row2 = cursor.fetchone()
+     
+        cursor.execute(
+            '''SELECT ta, id
+            FROM tutorial, stu_tut
+            WHERE course_id = %s and student_id = %s 
+            and tutorial_id = id    
+            ''', [course_id, VALIDATED[3:]])
+        row3 = cursor.fetchone()
+        
+        # questions for feedback_course
+        from list_questions import f_c, f_i, f_l, f_t
+
+        context = {
+            'course_id': course_id,
+            'course_name': row1[0],
+            'instructor': row,
+            'f_c': f_c,
+            'f_i': f_i,
+            's_id': VALIDATED[3:],
+        }   
+           
+        if str(type(row3)) != "<type 'NoneType'>":
+            context.update({'ta_tut': row3, 'f_t': f_t})
+            
+        if str(type(row2)) != "<type 'NoneType'>":
+            context.update({'ta_lab': row2, 'f_l': f_l})
+            
+        return render(request, 'feedback/feed_fill.html', context)
+    else:
+        return render(request, 'feedback/index.html')
+
+def feed_submit (request):
+    VALIDATED = str(request.session.get('validated'))
+    if VALIDATED[0:3] == 'STU' and VALIDATED[3:] == str(request.POST.get('hid_s_id')):
+        cursor = connection.cursor()
+        # add the values to the feedback_course
+        cursor.execute(
+            '''INSERT into feedback_course values
+            (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+            [request.POST.get('hid_s_id')+'_'+request.POST.get('hid_c_id'),
+             request.POST.get('hid_c_id'),
+             request.POST.get('hid_s_id'),
+             request.POST.get('f_c_grading_policy'),
+             request.POST.get('f_c_quality_of_tests'),
+             request.POST.get('f_c_challenging'),
+             request.POST.get('f_c_appreciation'),
+             request.POST.get('f_c_relevance'),
+             request.POST.get('f_c_availibility_material'),
+             request.POST.get('f_c_comments'),]
+        )
+
+        # add the values to the feedback_inst
+        cursor.execute(
+            '''INSERT into feedback_inst values
+            (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+            [request.POST.get('hid_s_id')+'_'+request.POST.get('hid_c_id'),
+             request.POST.get('hid_i_id'),
+             request.POST.get('hid_s_id'),
+             request.POST.get('f_i_teaching_method'),
+             request.POST.get('f_i_evaluation_time'),
+             request.POST.get('f_i_regularity'),
+             request.POST.get('f_i_legibility'),
+             request.POST.get('f_i_audibility'),
+             request.POST.get('f_i_ability_to_explain'),
+             request.POST.get('f_i_willingness_outside_class'),
+             request.POST.get('f_i_interactiveness'),
+             request.POST.get('f_i_length_lecture'),
+             request.POST.get('hid_c_id'),]
+        )
+
+        # add the values to the feedback_tut
+        #     if request.POST.get('hid_l_id') exists
+        if 'hid_l_id' in request.POST:
+            cursor.execute(
+                '''INSERT into feedback_lab values
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                [request.POST.get('hid_s_id')+'_'+request.POST.get('hid_c_id'),
+                 request.POST.get('hid_l_id'),
+                 request.POST.get('hid_s_id'),
+                 request.POST.get('f_l_quality_assignment'),
+                 request.POST.get('f_l_assessment'),
+                 request.POST.get('f_l_regularity'),
+                 request.POST.get('f_l_helpfullness_ta'),
+                 request.POST.get('f_l_length'),
+                 request.POST.get('f_l_usefullness'),]
+            )
+            
+        # add the values to the feedback_tut
+        #     if request.POST.get('hid_t_id') exists
+        if 'hid_t_id' in request.POST:
+            cursor.execute(
+                '''INSERT into feedback_tut values
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                [request.POST.get('hid_s_id')+'_'+request.POST.get('hid_c_id'),
+                 request.POST.get('hid_t_id'),
+                 request.POST.get('hid_s_id'),
+                 request.POST.get('f_t_quality_assignment'),
+                 request.POST.get('f_t_assessment'),
+                 request.POST.get('f_t_regularity'),
+                 request.POST.get('f_t_helpfullness_ta'),
+                 request.POST.get('f_t_length'),
+                 request.POST.get('f_t_usefullness'),]
+            )
+        
+        
+        return HttpResponseRedirect(reverse('feedback:student', args=(request.POST.get('hid_s_id'),)))
+    else:
+        return render(request, 'feedback/index.html')
+
+def feed_view (request, course_id):
+   
+    cursor = connection.cursor()
+    cursor.execute(
+        '''SELECT instructor_id 
+        FROM course
+        WHERE id = %s''', [course_id])
+    row = cursor.fetchall()
+    
+    l = ()
+    for i in row:
+        l = l+i
+        
+    VALIDATED = str(request.session.get('validated'))
+    if VALIDATED[0: 4] == 'INST' and int(VALIDATED[4:]) in l:
+
+        cursor.execute(
+            '''SELECT name, i.id
+            FROM instructor i, course c
+            WHERE c.instructor_id = i.id and c.id = %s''', [course_id])
+        instructor = cursor.fetchone()
+        cursor.execute(
+            '''SELECT title 
+            FROM course 
+            WHERE id = %s''', [course_id])
+        course_name = cursor.fetchone()[0]
+        cursor.execute(
+            '''SELECT ta, id
+            FROM lab 
+            WHERE course_id = %s''', [course_id])
+        lab = cursor.fetchone()
+        cursor.execute(
+            '''SELECT ta, id
+            FROM tutorial
+            WHERE course_id = %s''', [course_id])
+        tut = cursor.fetchone()
+
+        # questions for feedback_course
+        from list_questions import f_c, f_i, f_l, f_t
+
+        choice_grade = request.POST.get('grade')
+        if choice_grade == None:
+            choice_grade = 'all'
+        
+        if choice_grade == 'all':
+            # feedback_course
+            cursor.execute('''
+            SELECT *
+            FROM feedback_course
+            WHERE course_id = %s
+            ''', [course_id,]
+            )
+            row = list(cursor.fetchall())
+            
+            context = {'course_id': course_id,
+                   'course_name': course_name,
+                   'Instructor': instructor
+            }
+        
+            if len(row) != 0:
+                zip_c = gory_details_of_feed_view (row, f_c)
+                context.update({'zip_c': zip_c})
+
+            # feedback_inst
+            cursor.execute('''
+            SELECT *
+            FROM feedback_inst
+            WHERE instructor_id = %s
+            ''', [VALIDATED[4:],]
+            )
+            row = list(cursor.fetchall())
+
+            if len(row) != 0:
+                zip_i = gory_details_of_feed_view (row, f_i)
+                context.update({'zip_i': zip_i})
+
+            # feedback_lab
+            if str(type(lab)) != "<type 'NoneType'>":
+                cursor.execute('''
+                SELECT *
+                FROM feedback_lab
+                WHERE lab_id = %s
+                ''', [lab[1],]
+                )
+                row = list(cursor.fetchall())
+                if len(row) != 0:
+                    zip_l = gory_details_of_feed_view (row, f_t)
+                    context.update({'zip_l': zip_l, 't_lab': lab[0]})
+
+            # feedback_tut
+            if str(type(tut)) != "<type 'NoneType'>":
+                cursor.execute('''
+                SELECT *
+                FROM feedback_tut
+                WHERE tutorial_id = %s
+                ''', [tut[1],]
+                )
+                row = list(cursor.fetchall())
+                if len(row) != 0:
+                    zip_t = gory_details_of_feed_view (row, f_t)
+                    context.update({'zip_t': zip_t, 't_ta': tut[0]})
+
+            cursor.execute('''
+                SELECT distinct grades
+                FROM takes
+                '''
+            )
+        else:
+            # feedback_course
+            cursor.execute('''
+            SELECT f.* 
+            FROM feedback_course f, takes t 
+            WHERE f.student_id = t.student_id and 
+            f.course_id = t.course_id and
+            t.course_id = %s and
+            t.grades = %s
+            ''', [course_id, choice_grade,]
+            )
+            row = list(cursor.fetchall())
+            
+            context = {'course_id': course_id,
+                   'course_name': course_name,
+                   'Instructor': instructor
+            }
+        
+            if len(row) != 0:
+                zip_c = gory_details_of_feed_view (row, f_c)
+                context.update({'zip_c': zip_c})
+             # feedback_inst
+            cursor.execute('''
+            SELECT f.* 
+            FROM feedback_inst f, takes t, course c  
+            WHERE f.instructor_id = %s and 
+            f.student_id = t.student_id and 
+            t.course_id = c.id and 
+            c.instructor_id = f.instructor_id and
+            t.grades = %s
+            ''', [VALIDATED[4:], choice_grade,]
+            )
+            row = list(cursor.fetchall())
+
+            if len(row) != 0:
+                zip_i = gory_details_of_feed_view (row, f_i)
+                context.update({'zip_i': zip_i})
+
+            # feedback_lab
+            if str(type(lab)) != "<type 'NoneType'>":
+                cursor.execute('''
+                SELECT f.* 
+                FROM feedback_lab f, lab l, takes t 
+                WHERE f.lab_id = l.id and
+                l.course_id = t.course_id and 
+                t.student_id = f.student_id and
+                l.id = %s and
+                t.grades = %s
+                ''', [lab[1], choice_grade]
+                )
+                row = list(cursor.fetchall())
+                if len(row) != 0:
+                    zip_l = gory_details_of_feed_view (row, f_t)
+                    context.update({'zip_l': zip_l, 't_lab': lab[0]})
+
+            # feedback_tut
+            if str(type(tut)) != "<type 'NoneType'>":
+                cursor.execute('''
+                SELECT f.* 
+                FROM feedback_tut f, tutorial tu, takes t 
+                WHERE f.tutorial_id = tu.id and
+                tu.course_id = t.course_id and 
+                t.student_id = f.student_id and
+                tu.id = %s and
+                t.grades = %s
+                ''', [tut[1], choice_grade]
+                )
+                row = list(cursor.fetchall())
+                if len(row) != 0:
+                    zip_t = gory_details_of_feed_view (row, f_t)
+                    context.update({'zip_t': zip_t, 't_ta': tut[0]})
+
+            cursor.execute('''
+                SELECT distinct grades
+                FROM takes
+                '''
+            )
+        grades = list(cursor.fetchall())
+        context.update({'grades': grades, 'choice_grade': choice_grade})
+    
+        return render(request, 'feedback/feed_view.html', context)
+    else:
+        return render(request, 'feedback/index.html')
+
+def gory_details_of_feed_view (row, f_i):
+    ct_str = range(len(row[0])-4)
+    for i in range(len(row[0])-4):
+        li = []
+        for j in range(len(row)):
+            li.append(row[j][i+3])
+        ct_str[i] = li
+                
+    c_li = range(len(ct_str))
+    for i in range(len(ct_str)):
+        c_li[i] = [0, 0]
+        for x in range(3, len(f_i[i])+1):
+            c_li[i].append(ct_str[i].count(x))
+
+    c_bar = range(len(ct_str))
+    for i in range(len(ct_str)):
+        c_bar[i] = ['', '']
+        for x in range(3, len(f_i[i])+1):
+            c_bar[i].append(20*int((ct_str[i].count(x)*10)/(sum(c_li[i]))))
+    # c_final = range(len(c_bar))
+    # for j in range(len(c_bar)):
+    #     x = range(len(c_li[j]));
+    #     for i in range(len(c_li[j])):
+    #         x[i] = []
+    #         x[i].append(c_bar[j][i]+str(c_li[j][i]))
+    #     c_final[j] = x
+    zip_i = range(len(c_li))
+    for i in range(len(c_li)):
+        zip_i[i] = zip(f_i[i], c_bar[i], c_li[i])
+
+    return zip_i

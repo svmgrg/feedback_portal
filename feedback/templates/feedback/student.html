@@ -1,0 +1,101 @@
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'feedback/style.css' %}" />
+<script
+   type = "text/javascript" 
+   src = "{% static 'feedback/jquery.js' %}"></script>  
+<script
+   type = "text/javascript" 
+   src = "{% static 'feedback/row_click.js' %}"></script>
+
+<h3> FEEDBACK PORTAL </h3>
+{% if stu_det %}
+<h1>  Department of {{ stu_det.5 }} </h1>
+
+<h2> STUDENT PAGE </h2>
+
+<table class = "ostensible">
+  <tr>
+     <td align = "left">  <b> Student ID </b> </td>
+    <td> <b> - </b> </td>
+    <td align = "right"> {{ stu_det.0 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Name </b> </td>
+    <td> <b> - </b> </td>
+       <td align = "right"> {{ stu_det.1 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Year </b> </td>
+    <td> <b> - </b> </td>
+       <td align = "right"> {{ stu_det.3 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Degree </b> </td>
+    <td> <b> - </b> </td>
+       <td align = "right"> {{ stu_det.2 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Dept. ID </b> </td>
+    <td> <b> - </b> </td>
+       <td align = "right"> {{ stu_det.4 }} </td>
+  </tr>
+  <tr>
+     <td align = "left">  <b> Dept. Name </b> </td>
+    <td> <b> - </b> </td>
+    <td align = "right"> {{ stu_det.5 }} </td>
+  </tr>
+</table> <br>
+Welcome back {{ stu_det.1 }}!
+
+{% endif %}
+
+{% if course_det %}
+
+To fill in the feedback for a particular course, please select it from the list of following course(s):<br><br>
+
+<table class = "obscure">
+  <tr>
+    <th> Serial #</th>
+    <th> Course Name </th>
+    <th> Course ID </th>
+    <th> Feedback Filled </th>
+  </tr>
+  
+  {% for course in course_det %}
+
+  <tr
+     {% if course.2 == 'No' %}
+     class = "highlight"
+     data-href = "{% url 'feedback:feed_fill' course.0 %}"
+     {% else %}
+     class = "highlight_done"
+     {% endif %} >
+    <td>
+      {{ forloop.counter }}
+    </td>
+    <td>
+      {{ course.1 }}
+    </td>
+    <td>
+      {{ course.0 }}
+    </td>
+    <td>
+      {{ course.2 }}
+    </td>
+  </tr>
+
+  {% endfor %}
+
+</table>
+
+{% else %}
+
+You currently have no course feedbacks to fill.
+
+{% endif %}
+
+<form action = "{% url 'feedback:logout' %}" method = "post">
+  {% csrf_token %}
+  <br><br><input type = "submit" value = "LOGOUT" name = "submit" />
+</form>
+

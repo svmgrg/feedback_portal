@@ -1,0 +1,112 @@
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'feedback/style.css' %}" />
+
+<h3> FEEDBACK PORTAL </h3>
+<h2> FILL THE FEEDBACK HERE: </h2>
+
+<form action = "{% url 'feedback:student' s_id %}" method = "post">
+  {% csrf_token %}
+  <input type = "submit" value = "GO BACK AND SUBMIT LATER" name = "submit" />
+</form>
+
+<form action = "{% url 'feedback:feed_submit' %}" method = "post">
+  {% csrf_token %}
+
+  <input type = "hidden" name = "hid_s_id" value = "{{ s_id }}" />
+  
+  {% if f_c %}
+
+  <input type = "hidden" name = "hid_c_id" value = "{{ course_id }}" />
+  
+  <u><h2 class = "css_c"> Feedback of Course:</u> {{ course_name }} - {{ course_id }} </h2>
+  {% for ques in f_c %}
+  <b> Question {{ forloop.counter }}. {{ ques.1 }} </b><br>
+  {% for i in ques %}
+  {% if forloop.counter > 2 %}
+  <div class = "css_c">
+    <input type = "radio" name = "f_c_{{ ques.0 }}"
+	   id = "{{ i }}" value = "{{ forloop.counter }}"
+	   {% if forloop.counter == 3 %} checked = "checked" {% endif %} />
+    <label for = "{{ i }}"> {{ i }} </label> <br>
+  </div>
+  {% endif %}
+  {% endfor %}
+  <br>
+  {% endfor %}
+
+  <!--<b> Comments: </b><br>
+  <input type = "textarea" name = "f_c_comments" maxlength = "450" /> !-->
+  <input type = "hidden" name = "f_c_comments" value = "" />
+  
+  {% endif %}
+
+  {% if f_i %}
+
+  <input type = "hidden" name = "hid_i_id" value = "{{ instructor.1 }}" />
+  
+  <h2 class = "css_i"> <u> Feedback of Instructor:</u> Prof. {{ instructor.0 }} </h2> 
+  {% for ques in f_i %}
+  <b> Question {{ forloop.counter }}. {{ ques.1 }} </b><br>
+  {% for i in ques %}
+  {% if forloop.counter > 2 %}
+  <div class = "css_i">
+  <input type = "radio" name = "f_i_{{ ques.0 }}"
+	 id = "{{ i }}" value = "{{ forloop.counter }}"
+	 {% if forloop.counter = 3 %} checked = "checked" {% endif %} />
+  <label for = "{{ i }}"> {{ i }} </label> <br>
+  </div>
+  {% endif %}
+  {% endfor %}
+  <br>
+  {% endfor %}
+  {% endif %}
+
+  {% if f_l %}
+
+  <input type = "hidden" name = "hid_l_id" value = "{{ ta_lab.1 }}" />
+  
+  <u><h2 class = "css_l"> Feedback of Lab:</u> TA {{ ta_lab.0 }} </h2>
+  {% for ques in f_l %}
+  <b> Question {{ forloop.counter }}. {{ ques.1 }} </b><br>
+  {% for i in ques %}
+  {% if forloop.counter > 2 %}
+  <div class = "css_l">
+  <input type = "radio" name = "f_l_{{ ques.0 }}"
+	 id = "{{ i }}" value = "{{ forloop.counter }}"
+	 {% if forloop.counter = 3 %} checked = "checked" {% endif %} />
+  <label for = "{{ i }}"> {{ i }} </label> <br>
+  </div>
+  {% endif %}
+  {% endfor %}
+  <br>
+  {% endfor %}
+  {% endif %}
+
+  {% if f_t %}
+
+  <input type = "hidden" name = "hid_t_id" value = "{{ ta_tut.1 }}" />
+  
+  <u><h2 class = "css_t"> Feedback of Tutorial:</u> TA {{ ta_tut.0 }} </h2>
+  {% for ques in f_t %}
+  <b> Question {{ forloop.counter }}. {{ ques.1 }} </b><br>
+  {% for i in ques %}
+  {% if forloop.counter > 2 %}
+  <div class = "css_t">
+  <input type = "radio" name = "f_t_{{ ques.0 }}"
+	 id = "{{ i }}" value = "{{ forloop.counter }}"
+	 {% if forloop.counter = 3 %} checked = "checked" {% endif %} />
+  <label for = "{{ i }}"> {{ i }} </label> <br>
+  </div>
+  {% endif %}
+  {% endfor %}
+  <br>
+  {% endfor %}
+  {% endif %}
+  
+  <input type = "submit" value = "SUBMIT" name = "submit" />
+</form>
+
+<form action = "{% url 'feedback:student' s_id %}" method = "post">
+  {% csrf_token %}
+  <input type = "submit" value = "GO BACK AND SUBMIT LATER" name = "submit" />
+</form>

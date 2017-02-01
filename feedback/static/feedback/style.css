@@ -1,0 +1,249 @@
+@media screen and (max-width: 400px) {
+    h1 {
+        font-size: 15px;
+    }
+    h2 {
+        font-size: 12px;
+    }
+    h3 {
+        font-size: 11px;   
+    }
+    img {
+	width: 40%;
+	height: auto;
+    }
+    body {
+        font-size: 10px;
+    }
+    th {
+        font-size: 10px;
+    }
+    td {
+        font-size: 10px;
+    }
+}
+@media screen and (max-width: 900px) and (min-width: 400px) {
+    h1 {
+        font-size: 25px;
+    }
+    h2 {
+        font-size: 20px;
+    }
+    h3 {
+        font-size: 15px;   
+    }
+    img {
+	width: 40%;
+	height: auto;
+    }
+    body {
+        font-size: 13px;
+    }
+    th {
+        font-size: 13px;
+    }
+    td {
+        font-size: 13px;
+    }
+}
+h1 {
+  color: cadetblue;
+  text-align: center;
+}
+h2 { 
+  color: green;
+  text-align: center;
+}
+h3 {
+  color: darkred;
+  text-align: center;
+}
+body {
+    background: white url("images/skulls.png");
+    text-align: center;
+}
+
+.login {
+    margin: auto;
+    border: 3px cadetblue;
+    padding: 10px;
+}
+
+p.error {
+    color:  red;
+    font-size: 12px;
+}
+
+p.info {
+    text-align: left;
+}
+
+
+table.ostensible {
+    margin-left:auto; 
+    margin-right:auto;
+}
+
+table.obscure {
+    margin-left:auto; 
+    margin-right:auto;
+    border-collapse: collapse;
+}
+table.obscure td + td {
+    border-left: 1px solid cadetblue;;
+}
+table.obscure th + th {
+    border-left: 1px solid cadetblue;;
+}
+th {
+    padding:0 10px 0 10px;
+    color: darkgoldenrod;
+    border-bottom: 1px solid cadetblue;
+}
+tr.highlight {
+    text-align: center;
+    cursor: pointer;
+}
+tr.highlight:hover {
+    color: white;
+    background-color: darkseagreen;
+}
+tr.highlight_done {
+    color: grey;
+    text-align: center;
+}
+tr.highlight_done:hover {
+    color: red;
+    background-color: darkseagreen;
+}
+td {
+    padding:0 15px 0 15px;
+}
+
+h2.css_c {
+  color: darkblue;
+  text-align: center;
+}
+
+.css_c input[type='radio'] {
+    display:none;
+}
+
+.css_c label {
+    display:inline-block;
+    color: grey;
+}
+
+.css_c input[type='radio']:checked + label {
+    color: darkblue;
+    font-weight: bold;
+}
+
+h2.css_i {
+  color: firebrick;
+  text-align: center;
+}
+
+h2.css_i_fill {
+    color: seagreen;
+    text-align: center;
+}
+
+.css_i input[type='radio'] {
+    display:none;
+}
+
+.css_i label {
+    display:inline-block;
+    color: grey;
+}
+
+.css_i input[type='radio']:checked + label {
+    color: firebrick;
+    font-weight: bold;
+}
+
+h2.css_l {
+  color: darkgoldenrod;
+  text-align: center;
+}
+
+.css_l input[type='radio'] {
+    display:none;
+}
+
+.css_l label {
+    display:inline-block;
+    color: grey;
+}
+
+.css_l input[type='radio']:checked + label {
+    color: darkgoldenrod;
+    font-weight: bold;
+}
+
+h2.css_t {
+  color: green;
+  text-align: center;
+}
+
+.css_t input[type='radio'] {
+    display:none;
+}
+
+.css_t label {
+    display:inline-block;
+    color: grey;
+}
+
+.css_t input[type='radio']:checked + label {
+    color: green;
+    font-weight: bold;
+}
+
+a {
+    text-decoration: none;
+    color: darkgoldenrod;
+}
+
+.chart div {
+  font: 10px sans-serif;
+  text-align: right;
+  padding: 1px;
+  color: white;
+  font-weight: bold;
+}
+
+div.cl_3 {
+    background-color: brown;
+}
+p.cl_3 {
+    color: brown;
+}
+
+div.cl_4 {
+    background-color: cadetblue;
+}
+p.cl_4 {
+    color: cadetblue;
+}
+
+div.cl_5 {
+    background-color: darkorange;
+}
+p.cl_5 {
+    color: darkorange;
+}
+div.cl_6 {
+    background-color: seagreen;
+}
+p.cl_6 {
+    color: seagreen;
+}
+
+div.cl_7 {
+    background-color: darkgoldenrod;
+}
+p.cl_7 {
+    color: darkgoldenrod;
+}

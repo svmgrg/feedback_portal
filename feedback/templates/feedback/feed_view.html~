@@ -1,0 +1,140 @@
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'feedback/style.css' %}" />
+
+<h3> FEEDBACK PORTAL </h3>
+<h2>THE FEEDBACK: </h2>
+<p class = "info">
+Following is the feedback provided by the students enrolled in this course. Each bar graph and the integer inside it indicate the number of responses recorded for the corresponding option. Select Grades option can be used to filter responses using the grades achieved by the students at the end of the course.
+</p>
+
+<form action = "{% url 'feedback:instructor' Instructor.1 %}" method = "post">
+  {% csrf_token %}
+   <input type = "submit" value = "GO BACK" name = "submit" />
+</form>
+
+<form action = "{% url 'feedback:feed_view' course_id %}" method = "post">
+  {% csrf_token %}
+  <select name = "grade">
+    <option value = "all" > Select Grades </option>
+    {% for g in grades %}
+    <option value="{{ g.0 }}"
+	    {% if g.0 == choice_grade %} selected {% endif %}
+	    > {{ g.0 }} </option>
+    {% endfor %}
+  </select>
+  <input type = "submit" value = "FILTER" name = "submit" />
+</form>
+
+{% if zip_c %}
+<u><h2 class = "css_c"> Feedback of Course:</u> {{ course_name }} - {{ course_id }} </h2>
+{% for ques in zip_c  %}
+<div class = "chart">
+  <table class = "ostensible">
+    {% for x, y, z in ques %}  
+    {% if forloop.counter == 2 %}
+    <b> Question {{ forloop.parentloop.counter }}. {{ x }} </b><br>
+    {% endif %}
+    {% if forloop.counter > 2 %}
+    <tr>
+      <td align = "left">
+	<p class = "cl_{{ forloop.counter }}"><b> {{ x }} </b></p>
+      </td>
+      <td> - </td>
+      <td>  <div style = "width: {{ y }}px;"
+		 class = "cl_{{ forloop.counter }}">{{ z }}</div> </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+</div>
+<br>
+{% endfor %}
+{% else %}
+<p>
+  None of the students, who recieved this grade, have filled the feedback for this course yet.
+</p>
+{% endif %}
+
+
+{% if zip_i %}
+<u><h2 class = "css_i_fill"> Feedback of Instructor:</u> Prof. {{ Instructor.0 }} </h2>
+{% for ques in zip_i  %}
+<div class = "chart">
+  <table class = "ostensible">
+    {% for x, y, z in ques %}  
+    {% if forloop.counter == 2 %}
+    <b> Question {{ forloop.parentloop.counter }}. {{ x }} </b><br>
+    {% endif %}
+    {% if forloop.counter > 2 %}
+    <tr>
+      <td align = "center">
+	<p class = "cl_{{ forloop.counter }}"><b> {{ x }} </b></p>
+      </td>
+      <td> - </td>
+      <td>  <div style = "width: {{ y }}px;"
+		 class = "cl_{{ forloop.counter }}">{{ z }}</div> </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+</div>
+<br>
+{% endfor %}
+{% endif %}
+
+{% if zip_l %}
+<u><h2 class = "css_l"> Feedback of Lab:</u> TA {{ t_lab }} </h2>
+{% for ques in zip_l  %}
+<div class = "chart">
+  <table class = "ostensible">
+    {% for x, y, z in ques %}  
+    {% if forloop.counter == 2 %}
+    <b> Question {{ forloop.parentloop.counter }}. {{ x }} </b><br>
+    {% endif %}
+    {% if forloop.counter > 2 %}
+    <tr>
+      <td align = "center">
+	<p class = "cl_{{ forloop.counter }}"><b> {{ x }} </b></p>
+      </td>
+      <td> - </td>
+      <td>  <div style = "width: {{ y }}px;"
+		 class = "cl_{{ forloop.counter }}">{{ z }}</div> </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+</div>
+<br>
+{% endfor %}
+{% endif %}
+
+{% if zip_t %}
+<u><h2 class = "css_t"> Feedback of Tutorial:</u> TA {{ t_ta }} </h2>
+{% for ques in zip_t  %}
+<div class = "chart">
+  <table class = "ostensible">
+    {% for x, y, z in ques %}  
+    {% if forloop.counter == 2 %}
+    <b> Question {{ forloop.parentloop.counter }}. {{ x }} </b><br>
+    {% endif %}
+    {% if forloop.counter > 2 %}
+    <tr>
+      <td align = "center">
+	<p class = "cl_{{ forloop.counter }}"><b> {{ x }} </b></p>
+      </td>
+      <td> - </td>
+      <td>  <div style = "width: {{ y }}px;"
+		 class = "cl_{{ forloop.counter }}">{{ z }}</div> </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+</div>
+<br>
+{% endfor %}
+{% endif %}
+
+<form action = "{% url 'feedback:instructor' Instructor.1 %}" method = "post">
+  {% csrf_token %}
+  <input type = "submit" value = "GO BACK" name = "submit" />
+</form>
